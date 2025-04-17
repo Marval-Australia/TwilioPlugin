@@ -1,0 +1,26 @@
+{
+    "Name": "MarvalSoftware.Plugins.Twilio",
+    "Organisation": "Marval Software",
+    "DisplayName": "@@PluginDisplayname",
+    "Icon": "img/twilio.png",
+    "Version": "1.0.2",
+    "SupportedVersions": [
+        "15.7.1",
+        "15.7.2",
+        "15.10.0",
+        "15.10",
+        "15.10.1"
+    ],
+    "Pages": [
+        "plugin.aspx"
+    ],
+    "HtmlImportFile": "MarvalSoftware.Plugins.Twilio.html",
+    "TagName": "MarvalSoftware-Plugins-Twilio",
+    "GlobalSettings": [
+        "@@TwilioVoice",
+        "@@TwilioLanguage",
+        "@@TwilioAccountSID",
+        "@@TwilioAuthToken",
+        "@@TwilioFromPhone"
+    ]
+}

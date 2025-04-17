@@ -1,0 +1,22 @@
+{
+	"defaultLocale": "en-GB",
+	"resources": 
+		[{
+			"en-GB": {
+				"MessageFormat": "Message Format",
+				"CustomerGUID": "Customer Identifier",
+				"CustomerName": "Customer Name",
+				"SecretKey": "Secret Key",
+				"TwilioVoice": "Twilio Voice (See readme for options)",
+				"PluginDisplayname": "Twilio",
+				"TwilioLanguage": "Twilio Language (See readme for options)",
+				"TwilioAuthToken": "Twilio Auth Token",
+				"TwilioAccountSID": "Twilio Account SID",
+				"TwilioFromPhone": "Twilio From Phone Number",
+				"AADObjectGUIDLocation": "aadObject GUID Location",
+				"ChatbotHostOverride":  "Chatbot Host Override",
+				"MarvalAPIKey": "Marval API Key",
+			    "Region": "Region"
+			}
+		}]	
+}
