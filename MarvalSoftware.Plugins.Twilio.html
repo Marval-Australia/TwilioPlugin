@@ -103,27 +103,25 @@
                         var urlGenerator = currentUrl.split('RFP');
                         var version = $('#ctl00_ctl00_cph_maintenance_version').text();
                         console.log("Setting up the text....")
-                        // $('#installation').before("")
+               
                         var FullURL = urlGenerator[0] + 'RFP/Plugins/Marval%20Software/MarvalSoftware.Plugins.Twilio/' + version + '/Handler/Handler.ashx?tag=Twilio';
                         $('#installation').after("<br><p><b>To use this plugin, put the following URL into Request Actions.</b><p><br>" + FullURL + '<br>');
-
                         headerElem = $('#ctl00_ctl00_cph_entityHeaderText')
-                        //  headerElem.css("lineHeight", "20px")
-                        //  headerElem.css("height", "20px")
                         $('#ctl00_ctl00_cph_maintenance_quickFields').hide();
-
-                        // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').prop('disabled', true);
-                        // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl02_value').prop('disabled', true);
-                        // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl06_value').parent().hide();
-                        // this._hideField("@@ChatbotHostOverride");
-                        // this._hideField("@@Region");
-                        // var fieldID = this._getFieldID("@@Region");
-                        // var region = $('#' + fieldID).val();
-                        // console.log("Have region as ", region);
+               
                         async function getRequestActionUsage() {
                         
                         var getRequestActionUsage = await (await fetch("/MSM/RFP/Forms/RequestActions.aspx")).text();
-                        console.log("Have usage page as ", getRequestActionUsage);
+                 
+                        if (getRequestActionUsage.includes("MarvalSoftware.Plugins.Twilio/" + version)) {
+                            console.log("It appears that the request action is being used.");
+                            $('#requestActionUsage').text("You are currently using the Twilio request action message in a request action.");
+                            $('#requestActionUsage').css("color", "green");
+                        } else {
+                            console.log("The request action page is unused");
+                            $('#requestActionUsage').text("It appears as though you are currently not using the Twilio request action message in a request action, or are using the incorrect version.");
+                            $('#requestActionUsage').css("color", "red");
+                        }
                         }
 
 
@@ -131,13 +129,11 @@
                             var url = "https://raw.githubusercontent.com/Marval-Australia/TwilioPlugin/refs/heads/main/manifest.json";
                             var githubPluginVersion = await (await fetch(url)).json();
                             var pagePluginVersion = $('#ctl00_ctl00_cph_maintenance_version').text();
-                            console.log("Two versions are %s and %s ", pagePluginVersion, githubPluginVersion.Version);
+                            
                             if (pagePluginVersion == githubPluginVersion.Version) {
                                  $('#ctl00_ctl00_cph_maintenance_version').css("color", "green");
                                 $('#ctl00_ctl00_cph_maintenance_version').css("font-weight", "bold");
-                               $('.content').before(`
-                            <!--<div id="uptodatemessage" style="padding-left:360px;color:green !important;font-size:16px;font-weight:bold;display:none">Plugin is up to date!<br><br>-->
-                            `);
+                               
                                 $('#uptodatemessage').fadeIn(250);
                                 setTimeout(() => {
                                     $('#uptodatemessage').fadeOut(1000);
@@ -146,17 +142,13 @@
                                 $('#ctl00_ctl00_cph_maintenance_version').css("color", "red");
                                 $('#ctl00_ctl00_cph_maintenance_version').css("font-weight", "bold");
                                 $('#ctl00_ctl00_cph_maintenance_version').append(' - Plugin requires updating. Click <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a> for the new version.');
-                             
-                                $('.content').before(`
-                           <!-- <br> <div>
-                              <span style="position:absolute;padding-left:60px;z-index:1000; color:red !important;font-weight:bold;font-size:16px" >Your plugin is not up to date, download the latest version <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a>
-                    </div><br><br> -->
-
-                    `);
+                                
                             }
                         }
 
                         $(document).ready(function () {
+
+                            
                             getLatestPluginVersion();
                             getRequestActionUsage();
                             $('head').append(`
@@ -165,8 +157,9 @@
             display: inline-block;
             background-color: #1696B7;
             color: #ffffff;
-            padding: 8px 12px;
+            padding: 5px 12px;
             text-decoration: none;
+            cursor: pointer;
             border-radius: 4px;
             font-weight: bold;
             transition: background-color 0.3s;
@@ -178,7 +171,86 @@
         </style>
       `);
                         });
+                        function DownloadRequestActionFile() {
+                            event.preventDefault();
+                        const downloadFile = `
+@using System;
+@using System.Text;
 
+@{
+
+   // Change the phone number below to the phone number you are calling.
+   var phoneTo = "[CHANGE PHONE NUMBER]";
+   Model.Description= Model.Description.Replace(@"\\"," ");
+   Model.Description= Model.Description.Replace(@"/"," ");
+}
+
+@{var Symptom = string.Empty;
+   foreach (var item in Model.Classifications) {
+      foreach(var clas in Model.Classifications) {
+         if (clas.Parent != null && clas.Parent.Name=="Symptom") {
+             Symptom = clas.Description;
+         }
+       }
+    }
+}
+
+
+@{
+   string RequestNumber = Model.RequestNumber;
+   var RequestNumberLength = Model.RequestNumber.Length;
+   var NewRequestNumber = "";
+}
+
+@{
+   for(var i = 0; i < RequestNumberLength; i++) {
+      var charret = RequestNumber.IndexOf("", i, 1); 
+      var stringnew = RequestNumber.Substring(i,1);
+      NewRequestNumber = NewRequestNumber + " " + stringnew;
+    }
+}
+
+@{
+   var action  = "Twilio";
+   var Message = "This is the MARVAL Priority Alert system, " 
+                   +  "You have a new Priority "
+                    + @Model.Priority.Value 
+                    + " Alert. The incident number is "
+                    + @NewRequestNumber 
+                    + ".......The Symptom is "
+                    + @Symptom 
+                    + ". ............and the description is  "
+                    + @Model.Description
+                    + ".......................Please review your request queue and move the request to accepted to acknowledge this message. ";
+
+   var formData = new StringBuilder();
+   formData.Append("phoneTo=")
+           .Append(Uri.EscapeDataString(phoneTo))
+           .Append("&action=")
+           .Append(Uri.EscapeDataString(action))
+           .Append("&Message=")
+           .Append(Uri.EscapeDataString(Message));
+
+   var xWwwFormUrlencodedPayload = formData.ToString();
+}
+
+
+@xWwwFormUrlencodedPayload 
+                            `;
+                                const filename = "requestActionMessage.txt";
+                                const blob = new Blob([downloadFile], {
+    type: "text/plain;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link); 
+  link.click();                    
+  document.body.removeChild(link);  
+  URL.revokeObjectURL(url);
+
+                        }
 
                         function loginSettings() {
                             event.preventDefault();
@@ -188,7 +260,7 @@
                             var errors = 0;
                             var customernamecheck = $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl01_value').val();
                             var tenantid = $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl03_value').val();
-                            //$('#installPlugin').prop('disabled', true);
+                          
                             $('#errorText').text("");
                             if (customernamecheck === "" || customernamecheck === null) {
                                 errors++;
@@ -202,10 +274,9 @@
                                 $('#errorText').append("TenantID is required.<br>");
                             }
                             if (errors < 1) {
-                                //  $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').prop('disabled', false);
-                                //   $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl02_value').prop('disabled', false);
+                                
                                 $('#errorText').text("");
-                                // console.log("Tenant id is ", $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl03_value').val());
+                               
 
                                 var postData = {
                                     "hostSource": window.top.location.origin + "/MSM/",
@@ -230,11 +301,7 @@
                                             $('#successText').text("Your account was created successfully, please wait...");
                                             $('#ctl00_ctl00_cph_apply_fakeApplyButton').click();
                                         }
-                                        // if (Object.keys(result).length > 0) {
-                                        //     this._errorPopup(result);
-                                        // } else {
-                                        //     this._popup();
-                                        // }
+                                        
                                     },
                                     error: function (err) {
                                         $('#errorText').text(JSON.stringify(err));
@@ -244,10 +311,13 @@
                             }
                         }
 
-                        $('#ctl00_ctl00_cph_maintenance_pluginDetailsFieldSet').before(`
+                        $('#ctl00_ctl00_cph_maintenance_globalSettingsFieldSet').before(`
                    <br> <div>
    <fieldset>
+    <br>
+    <button class="hrefButton" id="requestActionMessageDownload">Dowload Request Action Message Snippet</button>
     </div>
+    <div id="requestActionUsage"></div>
 <div id="pluginStatus"></div>
     <br>
 <fieldset style="display: none;cursor:pointer;width: 800px" id="testPlugin">
@@ -257,47 +327,10 @@
     </div>
    `);
                         
-                        //   window.top.document.getElementById("region").onchange = Twilio._setRegion;
-                        $('#region').on('change', function () {
-                            //   console.log("Top level region as ");
-                            var selectedValue = $(this).val();                // e.g. "asia-pacific"
-                            //var selectedText = $(this).find('option:selected').text();  // e.g. "Asia Pacific"
-
-                            //console.log(selectedValue, selectedText);
-                            Twilio._setRegion(selectedValue);
-                        });
-                        //  getLatestPluginVersion();
-                        // window.top.document.getElementById("generatepassword").onclick = generatePassword;
-                        //     window.top.document.getElementById("installPlugin").onclick = createCustomer;
-                        //    window.top.document.getElementById("settingslogin").onclick = loginSettings;
-
-                        var field = $("label").filter(function () {
-                            return $(this).text() == "@@AADObjectGUIDLocation";
-                        }).parent()
-
-                        var clientField = $("label").filter(function () {
-                            return $(this).text() == "@@ClientID"
-                        }).parent()
-
-                        field.append(`
-                        <select id="objectLocationDropdown" value="In Marval">
-                            <option value="In Marval">In Marval</option>
-                            <option value="From Microsoft">From Microsoft</option>
-                            <option value="In an Attribute">In an Attribute</option>
-                        </select>`)
-
-                        //Twilio._renderObjectLocationDropdown();
-
-                        // window.top.document.getElementById("objectLocationDropdown").onchange = Twilio._onDropdown;
+                        window.top.document.getElementById("requestActionMessageDownload").onclick = DownloadRequestActionFile;
 
 
-                    } else if (currentUrl.includes("Request.aspx")) {
-                        //  this._requestNumber = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage().getRequestNumber();
-                        //   if (this._requestNumber) {
-                        //   this._setUpQuickMenu();
-                        //  }
                     }
-
 
                     document.addEventListener('DOMContentLoaded', function () {
                         if ($('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').val()) {
@@ -335,73 +368,6 @@
 
                     var cbField = ChatbotField.find("input").attr("id");
                     return cbField;
-                },
-                _setDownloadLinks: async function () {
-                    var getprivatekey = Twilio._getPluginPath() + "Handler.ashx?endpoint=getprivatekey";
-                    var getpublickey = Twilio._getPluginPath() + "Handler.ashx?endpoint=getpublickey";
-                    var getchatbotsnippet = Twilio._getPluginPath() + "Handler.ashx?endpoint=getchatbotsnippet";
-                    // let fetchedChatbotHostOverride = await (await fetch(url)).text();
-                    //var id = fetch(fetchedChatbotHostOverride).text();
-                    // console.log("Have ChatbotHostOverride as ", fetchedChatbotHostOverride);
-                    // var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=TenantID";
-                    // var tenantID = await (await fetch(url)).text();
-                    $('#privatekeydownload').attr('href', getprivatekey);
-                    $('#publickeydownload').attr('href', getpublickey);
-                    $('#chatbotsnippetdownload').attr('href', getchatbotsnippet);
-                },
-                _setTwilioLink: function () {
-                    String.prototype.format = function () {
-                        var args = arguments;
-                        return this.replace(/{([0-9]+)}/g, function (match, index) {
-                            return typeof args[index] == 'undefined' ? match : args[index];
-                        });
-                    };
-                    try {
-                        var contactEmail = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage().getContactPreferredEmail();
-                        // var contactName = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage()._contactSearcher._nameInput.value.split(', ')[1].split(' ')[0];
-                        // var requestNumber = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage()._requestTypeAcronym + "-" + MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage().getRequestNumber();
-                        // var currentUserName = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage()._mainMenu._menuBar._menuItems[2]._element.children[0].innerHTML.split(' ')[0];
-                        // var twilioLink = "https://twilio.microsoft.com/l/chat/0/0?users={0}&message=Hi {1}, {2} from IT is here, do you have a moment to talk about {3}?".format(contactEmail, contactName, currentUserName, requestNumber);
-                        // this._imageElement.src = this._getPluginPath() + "img/microsoft-twilio.png";
-                        // this._imageElement.setAttribute("onClick", "window.open('" + twilioLink + "', '_blank');");
-                        this._imageElement.style.display = "inline";
-                    } catch {
-                        // hide the button if any of the parameters can not be loaded
-                        // this._imageElement.style.display = "none";
-                    }
-                }, // End _setTwilioLink
-                _renderObjectLocationDropdown() {
-                    var field = $("label").filter(function () {
-                        return $(this).text() == "@@AADObjectGUIDLocation";
-                    }).parent()
-
-                    var clientField = $("label").filter(function () {
-                        return $(this).text() == "@@ClientID"
-                    }).parent()
-
-                    field.find("input").hide();
-
-                    var aadObjectId = field.find("input").val();
-                    switch (aadObjectId) {
-                        case "entra":
-                            clientField.hide();
-                            field.find("select").val("In Marval");
-                            break;
-                        case "microsoft":
-                            clientField.find(".largeLabel").html("Application (Client) ID");
-                            clientField.show();
-                            field.find("select").val("From Microsoft");
-                            break;
-                        case "attribute":
-                            clientField.find(".largeLabel").html("Attribute Name");
-                            clientField.show();
-                            field.find("select").val("In an Attribute");
-                            break;
-                        default:
-                            field.find("input").val("microsoft");
-                            Twilio._renderObjectLocationDropdown();
-                            break;
-                    }
                 },
                 _setRegion: function (field) {
                     console.log("Setting region to ", field);
@@ -458,323 +424,16 @@
                         return fetchedDom.find("#ctl00_cph_notifyAddress").text();
                     }
                 },
-                _startChat: async function (sender, e) {
-
-                    $("*").remove(".chatbot-container")
-                    $("*").remove("#TwilioError");
-                    $("#TwilioPopup").append(`<div id='TwilioError'><br><img src="` + Twilio._getPluginPath() + `img/spinner.gif" width="32px" height="32px"/></div>`)
-
-                    let hostString = await (await fetch(Twilio._getPluginPath() + "Handler.ashx?endpoint=ChatbotHostOverride")).text()
-                    let tenantId = await (await fetch(Twilio._getPluginPath() + "Handler.ashx?endpoint=TenantID")).text()
-                    let secret = await (await fetch(Twilio._getPluginPath() + "Handler.ashx?endpoint=SecretKey")).text()
-
-                    let aadCacheObject = await fetch("https://" + hostString + "/api/chatbot/aadobject?email=" + encodeURIComponent(Twilio._contactEmail) + "&tenantId=" + tenantId, {
-                        method: "GET"
-                    })
-                    if (aadCacheObject.ok) {
-                        Twilio._injectChatbot(await aadCacheObject.text());
-                    } else {
-                        switch (await (await fetch(Twilio._getPluginPath() + "Handler.ashx?endpoint=AADObjectGUIDLocation")).text()) {
-                            case "entra":
-                                try {
-                                    let dbVal = await (await fetch(Twilio._getPluginPath() + "Handler.ashx?endpoint=databaseValue&CIId=" + $("#ctl00_cph_contact_value").attr("value"))).text()
-
-                                    if (dbVal.test(/\A[0-9a-fA-F]{12}4[0-9a-fA-F]{3}[89abAB][0-9a-fA-F]{15}\Z/)) { // check valid uuid
-
-                                        fetch("https://" + hostString + "/api/chatbot/aadobjectWithToken", {
-                                            method: "POST",
-                                            body: {
-                                                aadObjectIds: [
-                                                    {
-                                                        userEmail: Twilio._contactEmail,
-                                                        aadObjectId: dbVal
-                                                    }
-                                                ],
-                                                token: secret,
-                                                tenantId: tenantId
-                                            }
-                                        })
-                                    }
-
-                                    Twilio._injectChatbot(dbVal);
-
-                                } catch (err) {
-                                    console.error("Error retrieving aadObjectId from database:\n", err);
-                                }
-                                break;
-                            case "microsoft":
-
-                                var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=ClientID"
-
-                                var id = await (await fetch(url)).text()
-
-                                const msalInstance = await msal.createStandardPublicClientApplication({
-                                    auth: {
-                                        clientId: id,
-                                        authority: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-                                    },
-                                });
-
-                                var loginRequest = {
-                                    scopes: ["https://graph.microsoft.com/.default"]
-                                };
-
-                                try {
-                                    var response = await msalInstance.loginPopup(loginRequest);
-
-                                    try {
-                                        const result = await (await fetch("https://graph.microsoft.com/v1.0/users?$filter=userPrincipalName eq '" + Twilio._contactEmail + "'", {
-
-                                            method: "GET",
-                                            headers: new Headers({
-                                                "Authorization": "Bearer " + response.accessToken,
-                                            })
-                                        })).json()
-
-                                        if (result.value.length < 1) {
-                                            throw Error("Search for contact returned no results.")
-                                        } else {
-
-                                            if (/^[0-9a-fA-F]{12}4[0-9a-fA-F]{3}[89abAB][0-9a-fA-F]{15}$/.test(result.value[0].id)) { // check valid uuid
-                                                fetch("https://" + hostString + "/api/chatbot/aadobjectWithToken", {
-                                                    method: "POST",
-                                                    body: {
-                                                        aadObjectIds: [
-                                                            {
-                                                                userEmail: Twilio._contactEmail,
-                                                                aadObjectId: result.value[0].id
-                                                            }
-                                                        ],
-                                                        token: secret,
-                                                        tenantId: tenantId
-                                                    }
-                                                })
-                                            } else {
-                                                console.log("Could not match GUID")
-                                            }
-                                            Twilio._injectChatbot(result.value[0].id);
-                                        }
-
-                                    } catch (err) {
-                                        $("#TwilioError").remove();
-                                        $("#TwilioPopup").append("<div id='TwilioError'><br><p style='color: red;'>Unable to find a Twilio contact for " + Twilio._contactEmail + "</p></div>")
-                                        console.error("Twilio search error:\n", err)
-                                        $("*").remove(".chatbot-container")
-                                    }
-
-                                } catch (err) {
-                                    $("#TwilioError").remove();
-                                    $("#TwilioPopup").append("<div id='TwilioError'><br><p style='color: red;'>Unable to authenticate with Microsoft</p></div>")
-                                    $("*").remove(".chatbot-container")
-                                    console.error("MS Auth error:\n", err)
-                                }
-                                break;
-                            case "attribute":
-                                try {
-                                    var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=ClientID"
-                                    var attributeName = await (await fetch(url)).text()
-
-                                    var CIId = $("#ctl00_cph_contact_value").attr("value")
-
-                                    var attrPage = $(await (await fetch("/MSM/RFP/Forms/SummaryPages/CustomerSummary.aspx?id=" + CIId)).text())
-
-                                    var attrLabel = attrPage.find("label").filter(function () {
-                                        return this.textContent == attributeName
-                                    })
-
-                                    if (attrLabel.length < 1) {
-                                        throw Error("Could not find attribute '" + attributeName + "' in contact's summary page. Is it configured?")
-                                    }
-
-                                    var aadObjectId = attrLabel.parent().find("span").text();
-                                    if (aadObjectId.test(/\A[0-9a-fA-F]{12}4[0-9a-fA-F]{3}[89abAB][0-9a-fA-F]{15}\Z/)) { // check valid uuid
-                                        fetch("https://" + hostString + "/api/chatbot/aadobjectWithToken", {
-                                            method: "POST",
-                                            body: {
-                                                aadObjectIds: [
-                                                    {
-                                                        userEmail: Twilio._contactEmail,
-                                                        aadObjectId: aadObjectId
-                                                    }
-                                                ],
-                                                token: secret,
-                                                tenantId: tenantId
-                                            }
-                                        })
-                                    }
-                                    Twilio._injectChatbot(aadObjectId);
-                                } catch (err) {
-                                    $("#TwilioError").remove();
-                                    var contactName = $("#ctl00_cph_contact_name").val().split(", ").pop()
-                                    $("#TwilioPopup").append("<div id='TwilioError'><br><p style='color: red;'>Unable to find Twilio ID attribute for " + $("#ctl00_cph_contact_name").val().split(", ").pop() + "</p></div>")
-                                    $("*").remove(".chatbot-container")
-                                    console.error("Attribute error:\n", err)
-                                }
-                                break;
-
-                        }
-
-                    }
-                },
-                _injectChatbot: async function (aadObjectId) {
-                    var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=TenantID";
-                    var tenantID = await (await fetch(url)).text();
-                    $("body").append(`
-                    <div class="chatbot-container" style="display: flex; position: relative; z-index: 1000; margin-left: auto; pointer-events: none; height: 100%; width: 400px; align-items: flex-end;">
-                       <iframe id="chatbot-iframe" src="" title="Marval Chatbot" allow="camera; microphone" style="pointer-events:auto;position: absolute; z-index: 1000; border: none; height: 600px; width: 100%"></iframe>
-                    </div>
-                    `);
-
-                    // Get contact name as the firstname in the contact field (split from "lastname, firstname")
-                    var contactName = $("#ctl00_cph_contact_name").val().split(", ").pop()
-
-                    var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=ChatbotHostOverride";
-
-                    // Create and style the text content
-                    let fetchedChatbotHostOverride = await (await fetch(url)).text();
-
-
-                    //  $("#chatbot-iframe").attr("src", "https://" + fetchedChatbotHostOverride + "/chatbot-client?requestId=" + MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage()._requestId + "&aadObjectId=" + aadObjectId + "&tenantId=" + tenantID + "&contactName=" + contactName + "&agentName=" + $(".myServiceDesk").children("a").text());
-                    $("#chatbot-iframe").attr("src", "https://" + fetchedChatbotHostOverride + "/chatbot-client?requestId=" + MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage()._requestId + "&aadObjectId=" + aadObjectId + "&tenantId=" + tenantID + "&contactName=" + contactName + "&agentName=" + $(".myServiceDesk").children("a").text());
-
-                    $("*").find(".chatbot-container").hide().fadeIn(300, function () { })
-
-                    let iframe = $("#chatbot-iframe")
-
-                    $("#TwilioError").remove();
-                    $("#TwilioPopup").append("<div id='TwilioError'><br><p style='color: green;'>Chatbot Connected</p></div>")
-                    setTimeout(function () {
-                        $("#ct100_overlay_id4").fadeOut(300, function () { Twilio._pluginWindow.hide() });
-                        $("*").find('.initiate').prop('disabled', false);
-                    }, 1000)
-                },
-                _setUpQuickMenu: function () {
-                    var styleElement = window.top.document.createElement("style");
-                    window.top.document.body.appendChild(styleElement);
-                    var pathFormatted = this._getPluginPath().replace(" ", "%20");
-                    var quickMenuStr = ".MarvalSoftware-Twilio-quick-menu-item { background-image: url(" + pathFormatted + "img/twilio-32.png); }";
-                    styleElement.sheet.insertRule(quickMenuStr, 0);
-                    var quickMenuId = window.top.document.querySelector(".quickMenu").id;
-                    var quickMenu = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getControl(quickMenuId);
-                    quickMenu.addMenuItem({
-                        Identifier: "MarvalSoftware-Twilio",
-                        Label: this._getString("@@PluginDisplayname"),
-                        HRef: "javascript:void(0);",
-                        CssClass: "MarvalSoftware-Twilio-quick-menu-item"
-                    });
-                    quickMenu.onMenuItemClicked.subscribe(function (sender, e) {
-                        if (e.menuItem.getIdentifier() === "MarvalSoftware-Twilio") {
-                            //this._preRequisiteCheck();
-                            this._popup();
-                        }
-                    }, this);
-                },
                 _onBtnClick: function () {
                     event.preventDefault();
                     $("*").find('.initiate').prop('disabled', true);
                     Twilio._startChat();
-                },
-                _createWindowElements: function () {
-                    $('.MarvalSoftware-Twilio').append(` <div id="TwilioContainer"> </div> `);
-                    $("marvalsoftware-plugins-twilio").empty()
-
-                    var isConnected = $("*").find("#chatbot-iframe").length > 0
-
-                    const div = window.top.document.createElement("div");
-                    div.className = "TwilioWindow";
-                    div.id = "TwilioPopup"
-                    $("#TwilioPopup").empty()
-
-                    const textContent = window.top.document.createElement("p");
-                    Twilio._contactEmail = MarvalSoftware.UI.Controls.ScriptManager.getInstance().getPage().getContactPreferredEmail();
-
-                    if (isConnected)
-                        textContent.innerHTML = 'You\'re already chatting to this ticket\'s contact <span style="font-weight:bold" id="contactEmailAddress"> (' + Twilio._contactEmail + ')</span>. Reconnect?';
-                    else
-                        textContent.innerHTML = 'Chat to the contact for this ticket? <span style="font-weight:bold" id="contactEmailAddress"> (' + Twilio._contactEmail + ') </span>';
-
-                    textContent.style.textAlign = "center";
-                    textContent.style.alignSelf = "center";
-                    textContent.style.marginTop = "60px";
-
-                    const Button = window.top.document.createElement("button");
-                    Button.innerHTML = isConnected ? "Reconnect" : "Start a chat"
-
-                    Button.style.marginTop = "20px";
-                    Button.className = "initiate";
-                    Button.style.width = "50%";
-                    Button.onclick = Twilio._onBtnClick;
-                    Button.style.cursor = "pointer";
-
-                    var Disconnect = null
-
-                    if (isConnected) {
-
-                        Disconnect = window.top.document.createElement("button");
-                        Disconnect.innerHTML = "Disconnect";
-
-                        Disconnect.style.marginTop = "20px";
-                        Disconnect.className = "disconnectChatbot";
-                        Disconnect.style.width = "50%";
-                        Disconnect.onclick = Twilio._disconnectChat;
-                        Disconnect.style.cursor = "pointer";
-
-                    }
-
-                    const loadingIndicator = window.top.document.createElement("div");
-                    loadingIndicator.className = "loadingIndicator";
-                    loadingIndicator.style.display = "none"; // Initially hidden
-                    loadingIndicator.innerText = "Searching..."; // Simple loading text (or use an icon)
-
-                    div.appendChild(textContent);
-
-                    div.appendChild(Button);
-                    if (Disconnect != null) {
-                        div.appendChild(Disconnect);
-                    }
-                    div.style.display = "flex";
-                    div.style.flexDirection = "column";
-                    div.style.alignItems = "center";
-                    div.style.justifyContent = "center";
-                    div.style.border = "none";
-                    div.style.padding = "0px";
-                    div.style.width = "100%";
-                    div.style.height = "100%";
-
-                    Twilio.appendChild(div);
                 },
                 _disconnectChat: function () {
                     event.preventDefault();
                     $("marvalsoftware-plugins-twilio").parent().parent().fadeOut(300, function () { Twilio._pluginWindow.hide() });
                     $("*").find(".chatbot-container").fadeOut(300, function () { $("*").remove(".chatbot-container"); })
                     $("#TwilioPopup").remove()
-                },
-                _popup: function () {
-                    $("#TwilioError").remove();
-                    var that = this;
-                    if (!this._pluginWindow) {
-                        this._pluginWindow = new MarvalSoftware.UI.Window({
-                            appendToElement: window.top.document.getElementById("aspnetForm"),
-                            title: this._getString("@@PluginDisplayname"),
-                            height: 260,
-                            width: 432,
-                            minHeight: 260,
-                            minWidth: 432,
-                            isResizable: true,
-                            isMaximizable: true,
-                            bodyElement: this
-                        });
-                    }
-
-                    this._createWindowElements();
-
-                    if (!this._pluginWindow.isVisible()) {
-                        this._pluginWindow.centerToViewport();
-                    }
-                    this._pluginWindow.show();
-                    this._pluginWindow.hide();
-                    $("#ct100_overlay_id4").show();
-                    this._pluginWindow.show();
                 }
             });
     })();
