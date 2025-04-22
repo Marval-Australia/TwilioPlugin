@@ -91,13 +91,11 @@
 
                     Twilio = this
 
-                    var currentUrl = window.top.location.href;
-                  
                     var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=generatePassword";
                     console.log("URL is ", url)
 
                     var PWelement = $('#ctl00_ctl00_cph_entityHeaderText').text();
-
+                    var currentUrl = window.top.location.href;
                     if (currentUrl.includes("Plugin.aspx") && PWelement == 'MarvalSoftware.Plugins.Twilio') {
 
                         var that = this;
@@ -114,32 +112,45 @@
                         //  headerElem.css("height", "20px")
                         $('#ctl00_ctl00_cph_maintenance_quickFields').hide();
 
-                        //   $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').prop('disabled', true);
-                        //   $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl02_value').prop('disabled', true);
+                        // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').prop('disabled', true);
+                        // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl02_value').prop('disabled', true);
                         // $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl06_value').parent().hide();
                         // this._hideField("@@ChatbotHostOverride");
-                        //   this._hideField("@@Region");
-                        //  var fieldID = this._getFieldID("@@Region");
-                        //   var region = $('#' + fieldID).val();
+                        // this._hideField("@@Region");
+                        // var fieldID = this._getFieldID("@@Region");
+                        // var region = $('#' + fieldID).val();
                         // console.log("Have region as ", region);
+                        async function getRequestActionUsage() {
+                        
+                        var getRequestActionUsage = await (await fetch("/MSM/RFP/Forms/RequestActions.aspx")).text();
+                        console.log("Have usage page as ", getRequestActionUsage);
+                        }
+
+
                         async function getLatestPluginVersion() {
                             var url = "https://raw.githubusercontent.com/Marval-Australia/TwilioPlugin/refs/heads/main/manifest.json";
                             var githubPluginVersion = await (await fetch(url)).json();
                             var pagePluginVersion = $('#ctl00_ctl00_cph_maintenance_version').text();
                             console.log("Two versions are %s and %s ", pagePluginVersion, githubPluginVersion.Version);
                             if (pagePluginVersion == githubPluginVersion.Version) {
+                                 $('#ctl00_ctl00_cph_maintenance_version').css("color", "green");
+                                $('#ctl00_ctl00_cph_maintenance_version').css("font-weight", "bold");
                                $('.content').before(`
-                               <div id="uptodatemessage" style="padding-left:360px;color:green !important;font-size:16px;font-weight:bold;display:none">Plugin is up to date!<br><br>
+                            <!--<div id="uptodatemessage" style="padding-left:360px;color:green !important;font-size:16px;font-weight:bold;display:none">Plugin is up to date!<br><br>-->
                             `);
                                 $('#uptodatemessage').fadeIn(250);
                                 setTimeout(() => {
                                     $('#uptodatemessage').fadeOut(1000);
                                 }, 2000);
                             } else {
+                                $('#ctl00_ctl00_cph_maintenance_version').css("color", "red");
+                                $('#ctl00_ctl00_cph_maintenance_version').css("font-weight", "bold");
+                                $('#ctl00_ctl00_cph_maintenance_version').append(' - Plugin requires updating. Click <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a> for the new version.');
+                             
                                 $('.content').before(`
-                            <br> <div>
+                           <!-- <br> <div>
                               <span style="position:absolute;padding-left:60px;z-index:1000; color:red !important;font-weight:bold;font-size:16px" >Your plugin is not up to date, download the latest version <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a>
-                    </div><br><br>
+                    </div><br><br> -->
 
                     `);
                             }
@@ -147,6 +158,7 @@
 
                         $(document).ready(function () {
                             getLatestPluginVersion();
+                            getRequestActionUsage();
                             $('head').append(`
         <style>
           .hrefButton {

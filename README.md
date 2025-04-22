@@ -44,7 +44,6 @@ See this page for more information on the settings.
   
 
 Some valid values for voice settings are the following
-
   
 
 | Language | Voice                          | Gender |
