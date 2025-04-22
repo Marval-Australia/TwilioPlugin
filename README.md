@@ -23,7 +23,7 @@ In this case, you would
 
   
 
-If you do not have an API key for Twilio, you can generate one by accessing the Twilio API dashboard <a  href="https://console.twilio.com/us1/account/keys-credentials/api-keys"> here</a>
+If you do not have an API key for Twilio, you can generate one by accessing the Twilio API dashboard <a  href="https://console.twilio.com/us1/account/keys-credentials/api-keys">here</a>
 
   
   
@@ -45,7 +45,7 @@ Some valid values for voice settings are the following
   
 
 | Language | Voice                          | Gender |
-|----------|--------------------------------|---|
+|----------|--------------------------------|--------|
 | en-GB | Google.en-GB-Chirp3-HD-Aoede      | Female
 | en-GB | Google.en-GB-Chirp3-HD-Kore       | Female
 | en-GB | en-GB-Chirp3-HD-Orus      | Male

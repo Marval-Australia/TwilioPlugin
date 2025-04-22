@@ -135,17 +135,14 @@ jsonObject.forEach(element => {
 });
 
 if (countItems === jsonObject.length && !foundActionMessage) {
-  $('#requestActionUsage').after("It appears as though you are currently not using the correct version (" + version + ") of the request action in an action message.<br>Navigate <a href='/MSM/RFP/Forms/RequestActions.aspx'>here</a> to set the correct version.");
+  $('#requestActionUsage').after("<div id=\"RequestUsage\">It appears as though you do not have a request action configured.<br>Navigate <a href='/MSM/RFP/Forms/RequestActions.aspx'>here</a> to configure a request action.</div>");
   $('#requestActionUsage').css("color", "red");
 }
   console.log(jsonObject);
 } catch (error) {
   console.error('Error parsing JSON:', error);
 }
-
                         }
-
-
                         async function getLatestPluginVersion() {
                             var url = "https://raw.githubusercontent.com/Marval-Australia/TwilioPlugin/refs/heads/main/manifest.json";
                             var githubPluginVersion = await (await fetch(url)).json();
@@ -162,12 +159,13 @@ if (countItems === jsonObject.length && !foundActionMessage) {
                             } else {
                                 $('#ctl00_ctl00_cph_maintenance_version').css("color", "red");
                                 $('#ctl00_ctl00_cph_maintenance_version').css("font-weight", "bold");
-                                $('#ctl00_ctl00_cph_maintenance_version').append(' - Plugin requires updating. Click <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a> for the new version.');
-                                
+                                $('#ctl00_ctl00_cph_maintenance_version').append(' - Plugin requires updating. Click <a href="https://github.com/Marval-Australia/TwilioPlugin/releases/latest/download/MarvalSoftware.Plugins.Twilio.zip">here</a> for the new version.'); 
                             }
                         }
 
                         $(document).ready(function () {
+                         
+
 
                             
                             getLatestPluginVersion();
@@ -189,9 +187,95 @@ if (countItems === jsonObject.length && !foundActionMessage) {
             background-color: #0056b3;
              color: #ffffff;
           }
+.modalBox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;                 /* toggle with JS */
+  place-items: center;
+  background: rgba(7, 63, 92, .60);   /* #073f5c with 60 % opacity */
+  backdrop-filter: blur(2px);
+}
+
+/* 🗂️  Content card -------------------------------------------------------- */
+.modal-content {
+  width: min(600px, 90%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  padding: 2.5rem 2.25rem;
+  animation: pop .35s ease;
+  position: relative;
+  font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+/* 🎀 Header */
+.modal-content h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: #073f5c;
+}
+.modal-content h2 span {
+  border-bottom: 3px solid #1696B7;
+  padding-bottom: .25rem;
+}
+
+/* ✅ Steps */
+.modal-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+  color: #073f5c;
+}
+.modal-steps li {
+  margin-bottom: .9rem;
+}
+.modal-steps a {
+  color: #1696B7;
+  text-decoration: underline;
+}
+.modal-steps a:hover {
+  text-decoration: none;
+}
+
+/* ❌ Close button --------------------------------------------------------- */
+.close {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #1696B7;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.close:hover { background: #073f5c; }
+
+/* 📈 Subtle pop‑in */
+@keyframes pop {
+  0%   { transform: scale(.85); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+
         </style>
       `);
                         });
+                        function openDialog() {
+                                event.preventDefault();
+                                $('#installInstructionsModal').fadeIn(200);
+                            }
+                           
+                             function openDialogModal() {
+                                $('#installInstructionsModal').fadeOut(200);
+                            }
+                           
                         function DownloadRequestActionFile() {
                             event.preventDefault();
                         const downloadFile = `
@@ -273,82 +357,67 @@ if (countItems === jsonObject.length && !foundActionMessage) {
 
                         }
 
-                        function loginSettings() {
-                            event.preventDefault();
-
-                        }
-                        function createCustomer() {
-                            var errors = 0;
-                            var customernamecheck = $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl01_value').val();
-                            var tenantid = $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl03_value').val();
-                          
-                            $('#errorText').text("");
-                            if (customernamecheck === "" || customernamecheck === null) {
-                                errors++;
-                                $('#errorText').append("Customer Name is required.<br>");
-                                $("#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl01_value").css("border", "1px solid red");
-
-                                $("#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl03_value").css("border", "1px solid red");
-                            }
-                            if (tenantid === "" || tenantid === null) {
-                                errors++;
-                                $('#errorText').append("TenantID is required.<br>");
-                            }
-                            if (errors < 1) {
-                                
-                                $('#errorText').text("");
-                               
-
-                                var postData = {
-                                    "hostSource": window.top.location.origin + "/MSM/",
-                                    "customerName": customernamecheck,
-                                    "action": "createTwilio",
-                                    "tenantID": tenantid
-                                };
-                                $('#installPlugin').after("<br>Creating record, please wait...");
-                                $.ajax({
-                                    type: "POST",
-                                    url: that._getPluginPath() + "Handler.ashx",
-                                    contentType: "application/x-www-form-urlencoded; charset=utf-8",
-                                    dataType: "json", // Expect JSON response
-                                    data: postData,
-                                    success: function (result) {
-                                        if (result.error) {
-                                            $('#errorText').text(result.error);
-                                        }
-                                        $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl00_value').val(result.guid);
-                                        $('#ctl00_ctl00_cph_maintenance_globalSettingsRepeater_ctl02_value').val(result.secretkey);
-                                        if (result.guid && result.secretkey) {
-                                            $('#successText').text("Your account was created successfully, please wait...");
-                                            $('#ctl00_ctl00_cph_apply_fakeApplyButton').click();
-                                        }
-                                        
-                                    },
-                                    error: function (err) {
-                                        $('#errorText').text(JSON.stringify(err));
-                                    }
-                                        .bind(this)
-                                });
-                            }
-                        }
-
                         $('#ctl00_ctl00_cph_maintenance_globalSettingsFieldSet').before(`
-                   <br> <div>
-   <fieldset>
-    <br>
-    <button class="hrefButton" id="requestActionMessageDownload">Dowload Request Action Message Snippet</button>
-    </div>
+  <br>
+  <div>
+    <fieldset>
+      <br>
+      <button class="hrefButton" id="requestActionMessageDownload">
+        Download Request Action Message Snippet
+      </button>
+
+      <!-- NEW BUTTON -->
+      <button class="hrefButton" id="viewInstallInstructions">
+        View Install Instructions
+      </button>
+    </fieldset>
+
     <div id="requestActionUsage"></div>
-<div id="pluginStatus"></div>
+    <div id="pluginStatus"></div>
+
     <br>
-<fieldset style="display: none;cursor:pointer;width: 800px" id="testPlugin">
-        <legend>Test Twilio Integration</legend><br>
-    </fieldset> 
-    
-    </div>
-   `);
+
+    <fieldset style="display:none;cursor:pointer;width:800px" id="testPlugin">
+      <legend>Test Twilio Integration</legend><br>
+    </fieldset>
+  </div>
+
+  <!-- SIMPLE MODAL DIALOG -->
+ <div id="installInstructionsModal" class="modalBox">
+  <div class="modal-content">
+    <button class="close" title="Close">&times;</button>
+
+    <h2><span>Installing the Twilio Request Action Plugin</span></h2>
+
+    <ul class="modal-steps">
+      <li>Create a Twilio account
+        <a href="https://www.twilio.com/en-us" target="_blank">here</a>
+        and generate an Auth Token 
+        <a href="https://console.twilio.com/us1/account/keys-credentials/api-keyshere" target="_blank">here</a>.
+      </li>
+
+      <li>On the plugin page, enter your <strong>Account SID</strong>, <strong>Auth Token</strong>,
+          <strong>Outbound Number</strong>, and (optionally) a <strong>Voice</strong> and associated <strong>Language</strong>.
+          Some voices and associated languages are listed in the <em>Readme</em> tab.</li>
+
+      <li>Download the "Request Action Message Snippet" from the plugin page.</li>
+
+      <li>Paste that snippet into a new request action message
+          <a href="/MSM/RFP/Forms/RequestActionMessage.aspx" target="_blank">here</a>
+          and update the phone number.</li>
+
+      <li>Create a request action rule
+          <a href="/MSM/RFP/Forms/RequestActionMessage.aspx" target="_blank">here</a>.  
+          Use the webhook URL from the <em>Readme</em> tab, set Content-Type: application/json, method POST.</li>
+    </ul>
+  </div>
+</div>
+`);
+
                         
                         window.top.document.getElementById("requestActionMessageDownload").onclick = DownloadRequestActionFile;
+                        window.top.document.getElementById("viewInstallInstructions").onclick = openDialog;
+                        window.top.document.getElementById("installInstructionsModal").onclick = openDialogModal;
 
 
                     }
