@@ -144,7 +144,7 @@ if (countItems === jsonObject.length && !foundActionMessage) {
 }
                         }
                         async function getLatestPluginVersion() {
-                            var url = "https://raw.githubusercontent.com/Marval-Australia/TwilioPlugin/refs/heads/main/manifest.json";
+                            var url = "https://raw.githubusercontent.com/Marval-Global/TwilioPlugin/refs/heads/main/manifest.json";
                             var githubPluginVersion = await (await fetch(url)).json();
                             var pagePluginVersion = $('#ctl00_ctl00_cph_maintenance_version').text();
                             
