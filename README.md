@@ -14,7 +14,7 @@ In this case, you would
 
 | Plugin | MSM |
 |---------|-------------|
-| 1.0.0 | 15+ |
+| All versions | All versions |
 
   
   
@@ -40,8 +40,6 @@ See this page for more information on the settings.
 
 <a  href="https://www.twilio.com/docs/voice/twiml/say/text-speech#available-voices-and-languages">Twilio Voice and Language Settings</a>
 
-  ### Twilio Voice
-  
 
 Some valid values for voice settings are the following
   

@@ -91,12 +91,9 @@
 
                     Twilio = this
 
-                    var url = Twilio._getPluginPath() + "Handler.ashx?endpoint=generatePassword";
-                    console.log("URL is ", url)
-
-                    var PWelement = $('#ctl00_ctl00_cph_entityHeaderText').text();
+                    var HeaderText = $('#ctl00_ctl00_cph_entityHeaderText').text();
                     var currentUrl = window.top.location.href;
-                    if (currentUrl.includes("Plugin.aspx") && PWelement == 'MarvalSoftware.Plugins.Twilio') {
+                    if (currentUrl.includes("Plugin.aspx") && HeaderText == 'MarvalSoftware.Plugins.Twilio') {
 
                         var that = this;
 
@@ -105,23 +102,47 @@
                         console.log("Setting up the text....")
                
                         var FullURL = urlGenerator[0] + 'RFP/Plugins/Marval%20Software/MarvalSoftware.Plugins.Twilio/' + version + '/Handler/Handler.ashx?tag=Twilio';
-                        $('#installation').after("<br><p><b>To use this plugin, put the following URL into Request Actions.</b><p><br>" + FullURL + '<br>');
+                        $('#installation').after("<br><p><b>To use this plugin, put the following URL into Request Actions.</b><p><br>" + FullURL + '<br> You also need to set a header with the Content-Type as application/x-www-form-urlencoded');
                         headerElem = $('#ctl00_ctl00_cph_entityHeaderText')
                         $('#ctl00_ctl00_cph_maintenance_quickFields').hide();
                
                         async function getRequestActionUsage() {
                         
                         var getRequestActionUsage = await (await fetch("/MSM/RFP/Forms/RequestActions.aspx")).text();
+                       
+                        var $tempContainer = $('<div>').html(getRequestActionUsage);
+                        var context = $tempContainer.find('#ctl00_ctl00_ctl00_cph_ruleSetEditor_rules').val();
                  
-                        if (getRequestActionUsage.includes("MarvalSoftware.Plugins.Twilio/" + version)) {
-                            console.log("It appears that the request action is being used.");
-                            $('#requestActionUsage').text("You are currently using the Twilio request action message in a request action.");
-                            $('#requestActionUsage').css("color", "green");
-                        } else {
-                            console.log("The request action page is unused");
-                            $('#requestActionUsage').text("It appears as though you are currently not using the Twilio request action message in a request action, or are using the incorrect version.");
-                            $('#requestActionUsage').css("color", "red");
-                        }
+                        var decodedString = $('<textarea/>').html(context).text();
+                        try {
+  var jsonObject = JSON.parse(decodedString);
+  let foundActionMessage = false;
+let countItems = 0;
+
+jsonObject.forEach(element => {
+  countItems++;
+  if (element.Actions.includes("MarvalSoftware.Plugins.Twilio/") && element.Actions.includes(version)) {
+    $('#requestActionUsage').after("<div id=\"RequestUsage\">You are currently using the Twilio request action message in a request action.</div>");
+    $('#RequestUsage').css("color", "green");
+    foundActionMessage = true;
+    return;
+  } else if (element.Actions.includes("MarvalSoftware.Plugins.Twilio/")) {
+    $('#requestActionUsage').after("<div id=\"RequestUsage\">It appears as though you are currently not using the correct version (" + version + ") of the request action in an action message.<br>Navigate <a target='_blank' href='/MSM/RFP/Forms/RequestAction.aspx?id=" + element.Identifier + "'>here</a> to set the correct version.</div>");
+    $('#RequestUsage').css("color", "red");
+    foundActionMessage = true;
+    return;
+  }
+});
+
+if (countItems === jsonObject.length && !foundActionMessage) {
+  $('#requestActionUsage').after("It appears as though you are currently not using the correct version (" + version + ") of the request action in an action message.<br>Navigate <a href='/MSM/RFP/Forms/RequestActions.aspx'>here</a> to set the correct version.");
+  $('#requestActionUsage').css("color", "red");
+}
+  console.log(jsonObject);
+} catch (error) {
+  console.error('Error parsing JSON:', error);
+}
+
                         }
 
 
